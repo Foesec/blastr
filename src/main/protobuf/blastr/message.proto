@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package blastr;
+
+option java_package = "org.flxkbr.blastr.proto";
+
+import "google/protobuf/timestamp.proto";
+
+message BasicMessage {
+  string id = 1;
+}
+
+message StandardMessage {
+  string id = 1;
+  google.protobuf.Timestamp ts = 2;
+}

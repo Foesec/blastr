@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package blastr;
+
+option java_package = "org.flxkbr.blastr.grpc";
+
+service BlastrService {
+  rpc HealthCheck (HealthRequest) returns (HealthReply) {}
+}
+
+message HealthRequest {}
+message HealthReply {
+  bool healthy = 1;
+}
