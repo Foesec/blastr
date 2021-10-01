@@ -4,6 +4,7 @@ import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import org.flxkbr.blastr.config.ConfigModule
+import org.flxkbr.blastr.http.HttpModule
 import org.flxkbr.blastr.kafka.KafkaModule
 
 object Blastr {
@@ -13,6 +14,6 @@ object Blastr {
 
     val configModule = new ConfigModule()
     val kafkaModule  = new KafkaModule(configModule)
-
+    val httpModule   = new HttpModule(configModule, kafkaModule)
   }
 }

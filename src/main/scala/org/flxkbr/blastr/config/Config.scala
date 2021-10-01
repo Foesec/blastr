@@ -10,4 +10,5 @@ abstract class Config {
   val Port: Int
   val DefaultTopic: String
   val DefaultTickTime: FiniteDuration
+  val DefaultBootstrapServer: String
 }

@@ -18,6 +18,8 @@ class ConfigModule {
         blastrConfig.getDuration("default-tick-time").toMillis,
         TimeUnit.MILLISECONDS
       )
+    override val DefaultBootstrapServer: String =
+      localConfig.getString("akka.default-bootstrap-server")
     override val Hostname: String            = blastrConfig.getString("hostname")
     override val Port: Int                   = blastrConfig.getInt("port")
     override val ApplicationConfig: TsConfig = localConfig

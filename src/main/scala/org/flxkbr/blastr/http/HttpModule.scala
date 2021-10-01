@@ -2,7 +2,12 @@ package org.flxkbr.blastr.http
 
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{
+  ContentTypes,
+  HttpEntity,
+  HttpResponse,
+  StatusCodes
+}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import org.flxkbr.blastr.config.ConfigModule
@@ -21,9 +26,13 @@ class HttpModule(configModule: ConfigModule, kafkaModule: KafkaModule)(implicit
     concat(
       pathPrefix("basic") {
         post {
-          onSuccess(kafkaModule.startBasicInfiniteProduce()) { _ =>
-            complete(StatusCodes.OK)
-          }
+          val pubId = kafkaModule.publisherManager.startBasicInfiniteProducer()
+          complete(
+            HttpEntity(
+              ContentTypes.`text/plain(UTF-8)`,
+              s"Successfully started BASIC PUBLISHER ${pubId.value}"
+            )
+          )
         }
       }
     )
