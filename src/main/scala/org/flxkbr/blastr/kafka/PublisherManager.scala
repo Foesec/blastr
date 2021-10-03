@@ -1,10 +1,11 @@
 package org.flxkbr.blastr.kafka
 
+import akka.event.Logging
 import akka.{Done, NotUsed}
 import akka.kafka.ProducerSettings
 import akka.kafka.scaladsl.Producer
 import akka.stream.scaladsl.{Keep, Source}
-import akka.stream.{KillSwitches, Materializer, UniqueKillSwitch}
+import akka.stream.{Attributes, KillSwitches, Materializer, UniqueKillSwitch}
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{StringSerializer, VoidSerializer}
@@ -37,21 +38,46 @@ class PublisherManager(config: Config)(implicit mat: Materializer)
           BasicMessage(i.toString)
         )
       }
+      .log("basic_infinite_producer")
+      .withAttributes(
+        Attributes.logLevels(
+          onElement = Logging.DebugLevel,
+          onFinish = Logging.InfoLevel,
+          onFailure = Logging.ErrorLevel
+        )
+      )
       .viaMat(KillSwitches.single)(Keep.right)
       .toMat(
         Producer.plainSink(
-          ProducerSettings(
-            actualConfig.ApplicationConfig
-              .getConfig("akka.kafka.producer"),
-            new StringSerializer,
-            MessageSerializer
-          ).withBootstrapServers(actualConfig.DefaultBootstrapServer)
+          {
+            val ps = ProducerSettings(
+              actualConfig.ApplicationConfig
+                .getConfig("akka.kafka.producer"),
+              new StringSerializer,
+              MessageSerializer
+            ).withBootstrapServers(actualConfig.DefaultBootstrapServer)
+            logger.info(s"Creating producer settings ${ps}")
+            ps
+          }
         )
       )(Keep.left)
       .run()
     val key = PublisherId.generate()
     producersStore.put(key, killSwitch)
     key
+  }
+
+  def stopBasicInfiniteProducer(id: PublisherId): Boolean = {
+    producersStore
+      .remove(id)
+      .fold {
+        logger.warn(s"Unable to stop producer $id. Not found.")
+        false
+      } { killSwitch =>
+        logger.info(s"Stopping producer $id")
+        killSwitch.shutdown()
+        true
+      }
   }
 
   def shutdownAll(): Future[Done] = {
